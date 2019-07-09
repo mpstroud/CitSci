@@ -1,0 +1,33 @@
+---
+title: "CitSci exploratory"
+output: html_document
+---
+###########################
+Package load and retrieval
+###########################
+```{r,warning=F}
+#necessary packages: 
+pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","forecast")
+for(i in 1:length(pack_list)){
+  install.packages(paste("", pack_list[[i]]),repos = "http://cran.us.r-project.org")
+}
+
+```
+
+###################################################
+Looping through the files 
+###################################################
+```{r setup, include=FALSE}
+setwd("/Users/marc_peipoch/Desktop/filelooping")
+file.names <- dir(getwd(), pattern =".csv")
+    case.count<-data.frame(matrix(ncol = 2, nrow = 0)) 
+    colnames(case.count) <- c("site","cases")
+            for(i in 1:length(file.names)){
+            file <- read.table(file.names[i],header=TRUE, sep=",", 
+                               stringsAsFactors=TRUE)
+            case.count[i,1] <- file.names[i]
+            case.count[i,2] <- nrow(file[i])
+            }
+
+
+```

@@ -11,14 +11,14 @@ pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","f
 for(i in 1:length(pack_list)){
   install.packages(paste("", pack_list[[i]]),repos = "http://cran.us.r-project.org")
 }
-
+library(ggplot2)
 ```
 
 ###################################################
 Looping through the files 
 ###################################################
 ```{r setup, include=FALSE}
-setwd("/Users/marc_peipoch/Desktop/filelooping")
+setwd("R:/WilliamPenn_Delaware River/CitSci/Data/DRWItxtFiles/SASCSV/files")
 file.names <- dir(getwd(), pattern =".csv")
     case.count<-data.frame(matrix(ncol = 2, nrow = 0)) 
     colnames(case.count) <- c("site","cases")
@@ -26,8 +26,10 @@ file.names <- dir(getwd(), pattern =".csv")
             file <- read.table(file.names[i],header=TRUE, sep=",", 
                                stringsAsFactors=TRUE)
             case.count[i,1] <- file.names[i]
-            case.count[i,2] <- nrow(file[i])
+            case.count[i,2] <- nrow(file)
             }
-
+ggplot(case.count, aes(x=cases)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+
+ geom_density(alpha=.2, fill="#FF6666") 
 
 ```

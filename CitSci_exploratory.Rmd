@@ -18,7 +18,7 @@ library(ggplot2)
 Looping through the files 
 ###################################################
 ```{r setup, include=FALSE}
-setwd("R:/WilliamPenn_Delaware River/CitSci/Data/DRWItxtFiles/SASCSV/files")
+setwd("~/Library/Mobile Documents/com~apple~CloudDocs/files")
 file.names <- dir(getwd(), pattern =".csv")
     case.count<-data.frame(matrix(ncol = 2, nrow = 0)) 
     colnames(case.count) <- c("site","cases")
@@ -31,5 +31,10 @@ file.names <- dir(getwd(), pattern =".csv")
 ggplot(case.count, aes(x=cases)) + 
  geom_histogram(aes(y=..density..), colour="black", fill="white")+
  geom_density(alpha=.2, fill="#FF6666") 
-
+hist(case.count[,2])
 ```
+
+plot avg parameter per sites
+
+
+

@@ -3,21 +3,22 @@ title: "CitSci exploratory"
 output: html_document
 ---
 ###########################
-Package load and retrieval
+Package load/retrieval
 ###########################
 ```{r,warning=F}
 #necessary packages: 
 pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","forecast")
 for(i in 1:length(pack_list)){
-  install.packages(paste("", pack_list[[i]]),repos = "http://cran.us.r-project.org")
+  p <- pack_list[[i]]
+  install.packages(p,repos = "https://cran.rstudio.com",dependencies = TRUE)
 }
-library(ggplot2)
 ```
 
 ###################################################
 Looping through the files 
 ###################################################
 ```{r setup, include=FALSE}
+library(ggplot2)
 setwd("~/Library/Mobile Documents/com~apple~CloudDocs/files")
 file.names <- dir(getwd(), pattern =".csv")
     case.count<-data.frame(matrix(ncol = 2, nrow = 0)) 
@@ -34,7 +35,13 @@ ggplot(case.count, aes(x=cases)) +
 hist(case.count[,2])
 ```
 
-plot avg parameter per sites
+Example of detailed analysis for PUWC1S
+```{r}
+detach("package:dplyr", unload=TRUE); library(dplyr)
+data<-read.csv("PUWC1S.csv")
+data<- select(data,c("DateTimeEST"))
+
+```
 
 
 

@@ -2,21 +2,19 @@
 title: "CitSci exploratory"
 output: html_document
 ---
-###########################
-Package load/retrieval
-###########################
+
+1) Package load/retrieval
 ```{r,warning=F}
 #necessary packages: 
-pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","forecast","lubridate")
+pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","forecast","lubridate", "expss")
 for(i in 1:length(pack_list)){
   p <- pack_list[[i]]
   install.packages(p,repos = "https://cran.rstudio.com",dependencies = TRUE)
 }
 ```
 
-###################################################
-Looping through the files 
-###################################################
+
+2) Case count for site selection
 ```{r setup, include=FALSE}
 library(ggplot2)
 setwd("~/Library/Mobile Documents/com~apple~CloudDocs/files")
@@ -36,22 +34,73 @@ ggplot(case.count, aes(x=cases)) +
 hist(case.count[,2])
 ```
 
-Example of detailed analysis for PUWC1S
+3) Individial site analysis. Input specs first and check output_lists for results
 ```{r}
-detach("package:dplyr", unload=TRUE); library(dplyr) ; library(lubridate)
+#Input
 data <- read.csv("PUWC1S.csv")
+thermal_setpoint = 20
+
+daily_data =list() 
+  #1- daily depth data data with min, mean, max
+    #2- daily conductivity data data with min, mean, max
+      #3- daily Temperature data data with min, mean, max
+        #4- daily High-Turbidity data data with min, mean, max
+          #5- daily Low-Turbidity data data with min, mean, max
+            #6- daily DO-% data data with min, mean, max
+              #7- daily DO-ppm data data with min, mean, max
+daily_plots =list() 
+  #1- daily depth interactive plot
+    #2- daily conductivity interactive plot
+      #3- daily Temperature interactive plot
+        #4- daily High-Turbidity interactive plot
+          #5- daily Low-Turbidity interactive plot
+            #6- daily DO-% interactive plot
+              #7- daily DO-ppm interactive plot
+
+library(dplyr)  
+library(lubridate)
+library(xts)
+library(tidyverse)
+library(dygraphs)
+library(forecast)
+library(timeSeries)
+library(glue)
+library(expss)
+
+################################################# create a workable datetime vector with :lubridate:
 data2 <- select(data,-c(sitecode,loggerid,DateTimeEST,TZ,filename,battery_v,boardtemp,DOTemp_degC,loggerDT))
-#create a workable datetime vector with :lubridate:
 data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y") #output is YYYY-mm-dd
 data2$dateEST <- as.character(data2$dateEST) ; data2$TimeEST <- as.character(data2$TimeEST)
 data2$datetime <- paste(data2$dateEST, data2$TimeEST) ; data2$datetime <- ymd_hm(data2$datetime)
 
-##data3 --- min, avg, and max values per day
-pmt = "temp_degc"
-data3 = data2 %>% group_by(dateEST) %>%
-        summarise_at(vars(pmt), funs(min(., na.rm = TRUE), 
+################################################# min, avg, and max daily values for each parameter
+pmt_names = colnames(data2[,3:9])
+      for(i in 1:length(pmt_names)){
+            pmt = pmt_names[i]
+            daily_data[[i]]  = data2 %>% group_by(dateEST) %>%
+            summarise_at(vars(pmt), funs(min(., na.rm = TRUE), 
                                      mean(., na.rm = TRUE), 
                                      max(., na.rm = TRUE)))
+      }
+
+################################################# interactive plot for daily data
+for(i in 1:length(daily_data)){
+            data3 = daily_data[[i]] 
+            data3$dateEST<-as.Date(data3$dateEST, format = "%Y-%m-%d")
+            daily_timeseries = xts(x = data3[,-1], order.by = data3$dateEST)
+                    daily_plots[[i]] = dygraph(daily_timeseries,xlab = NULL, ylab = pmt_names[i]) %>%
+                  dySeries(c("min", "mean", "max"))
+      }
+
+################################################# hours per day over a given threshold
+data4 = select(data2,c(dateEST))
+data4$Tcount = count_row_if(gt(thermal_setpoint), data2$temp_degc)
+    hours_over = data4 %>% 
+      group_by(dateEST) %>%
+      summarise(Tcount = sum(Tcount)/12)
+
+    
+
 
 ```
 

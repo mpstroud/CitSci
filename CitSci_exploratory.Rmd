@@ -7,7 +7,7 @@ Package load/retrieval
 ###########################
 ```{r,warning=F}
 #necessary packages: 
-pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","forecast")
+pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","forecast","lubridate")
 for(i in 1:length(pack_list)){
   p <- pack_list[[i]]
   install.packages(p,repos = "https://cran.rstudio.com",dependencies = TRUE)
@@ -20,6 +20,7 @@ Looping through the files
 ```{r setup, include=FALSE}
 library(ggplot2)
 setwd("~/Library/Mobile Documents/com~apple~CloudDocs/files")
+setwd("C:/Users/admin/iCloudDrive/files")
 file.names <- dir(getwd(), pattern =".csv")
     case.count<-data.frame(matrix(ncol = 2, nrow = 0)) 
     colnames(case.count) <- c("site","cases")
@@ -37,9 +38,20 @@ hist(case.count[,2])
 
 Example of detailed analysis for PUWC1S
 ```{r}
-detach("package:dplyr", unload=TRUE); library(dplyr)
-data<-read.csv("PUWC1S.csv")
-data<- select(data,c("DateTimeEST"))
+detach("package:dplyr", unload=TRUE); library(dplyr) ; library(lubridate)
+data <- read.csv("PUWC1S.csv")
+data2 <- select(data,-c(sitecode,loggerid,DateTimeEST,TZ,filename,battery_v,boardtemp,DOTemp_degC,loggerDT))
+#create a workable datetime vector with :lubridate:
+data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y") #output is YYYY-mm-dd
+data2$dateEST <- as.character(data2$dateEST) ; data2$TimeEST <- as.character(data2$TimeEST)
+data2$datetime <- paste(data2$dateEST, data2$TimeEST) ; data2$datetime <- ymd_hm(data2$datetime)
+
+##data3 --- min, avg, and max values per day
+pmt = "temp_degc"
+data3 = data2 %>% group_by(dateEST) %>%
+        summarise_at(vars(pmt), funs(min(., na.rm = TRUE), 
+                                     mean(., na.rm = TRUE), 
+                                     max(., na.rm = TRUE)))
 
 ```
 

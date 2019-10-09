@@ -1,4 +1,4 @@
----
+ ---
 title: "CitSci exploratory"
 output: html_document
 ---
@@ -14,7 +14,7 @@ for(i in 1:length(pack_list)){
 ```
 
 
-2) Case count for site selection
+2) INDIVIDUAL SITE ANALISYS
 ```{r setup, include=FALSE}
 library(ggplot2)
 library(dplyr)  
@@ -32,60 +32,74 @@ options(stringsAsFactors = FALSE)
 setwd("~/Library/Mobile Documents/com~apple~CloudDocs/files")
 setwd("C:/Users/admin/iCloudDrive/files")
 
-#Individial site analysis. Input specs first and check output_lists for results
+#############################################Individial site analysis. Input specs first and check output_lists for results
 data <- read.csv("PUWC1S.csv")
-thermal_setpoint = 20
-################################################# create a workable datetime vector with :lubridate:
 data2 <- select(data,c(sitecode,dateEST,TimeEST,depth_mm,temp_degc))
 data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y") #output is YYYY-mm-dd
 data2$dateEST <- as.character(data2$dateEST) ; data2$TimeEST <- as.character(data2$TimeEST)
 data2$datetime <- paste(data2$dateEST, data2$TimeEST) ; data2$datetime <- ymd_hm(data2$datetime)
 temp_data<-select(data2,c(sitecode,depth_mm,temp_degc,datetime))
 
-################################################# create a month 
+#create a month variable
 temp_data <- temp_data %>%
   mutate(year = year(datetime))  %>%
   mutate(month = month(datetime))  %>%
   mutate(day = day(datetime))
  
 temp_summer_data <- temp_data %>%
-  filter(month==c("6","7","8","9")) #this dataset will be kept as is#######    temp_summer_data
+  filter(month==c("6","7","8","9")) #this dataset will be kept as is    #######    temp_summer_data
+
+diel <- function(x){
+  max(x) - min(x)} #to get diel change in T per day
 
 temp_summer_par <- temp_summer_data %>%
   group_by(year,month,day) %>%
-  summarise_at("temp_degc", funs(min(., na.rm = TRUE), 
-                                     mean(., na.rm = TRUE), 
-                                     max(., na.rm = TRUE)))
+  summarise_at("temp_degc", tibble::lst(min, mean, max, diel)) # Vars are Auto named with `tibble::lst()`
 
+```
 
-pmt_names = colnames(data2[,3:9])
-      for(i in 1:length(pmt_names)){
-            pmt = pmt_names[i]
-            daily_data[[i]]  = data2 %>% group_by(dateEST) %>%
-            summarise_at(vars(pmt), funs(min(., na.rm = TRUE), 
-                                     mean(., na.rm = TRUE), 
-                                     max(., na.rm = TRUE)))
-      }
+2) LOOPED SITE ANALISYS
+```{r setup, include=FALSE}
+### iterate this for each file ###
 
-################################################# interactive plot for daily data
-for(i in 1:length(daily_data)){
-            data3 = daily_data[[i]] 
-            data3$dateEST<-as.Date(data3$dateEST, format = "%Y-%m-%d")
-            daily_timeseries = xts(x = data3[,-1], order.by = data3$dateEST)
-                    daily_plots[[i]] = dygraph(daily_timeseries,xlab = NULL, ylab = pmt_names[i]) %>%
-                  dySeries(c("min", "mean", "max"))
-      }
+diel <- function(x){
+  max(x) - min(x)} 
 
+file.names <- dir(getwd(), pattern =".csv")
+    temp.summary<-data.frame(matrix(ncol = 8, nrow = 0)) 
+    colnames(temp.summary) <- c("site","year","month","day","min","mean","max","diel")
+            for(i in 1:length(file.names)){
+              
+file <- read.table(file.names[i],header=TRUE, sep=",", stringsAsFactors=TRUE)
+data2 <- select(file,c(sitecode,dateEST,TimeEST,depth_mm,temp_degc))
+data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y")
+data2$dateEST <- as.character(data2$dateEST) ; data2$TimeEST <- as.character(data2$TimeEST)
+data2$datetime <- paste(data2$dateEST, data2$TimeEST) ; data2$datetime <- ymd_hm(data2$datetime)
+temp_data<-select(data2,c(sitecode,depth_mm,temp_degc,datetime))
+
+temp_data <- temp_data %>%
+  mutate(year = year(datetime))  %>%
+  mutate(month = month(datetime))  %>%
+  mutate(day = day(datetime))
+temp_summer_data <- temp_data %>%
+  filter(month==c("6","7","8","9")) 
+temp_summer_par <- temp_summer_data %>%
+  group_by(year,month,day) %>%
+  summarise_at("temp_degc", tibble::lst(min, mean, max, diel)) 
+temp.summary<-rbind(temp.summary,temp_summer_par)
+            }
+
+```    
+    
+3) hours per day over a given threshold   
+```{r}    
 ################################################# hours per day over a given threshold
+thermal_setpoint = 20
 data4 = select(data2,c(dateEST))
 data4$Tcount = count_row_if(gt(thermal_setpoint), data2$temp_degc)
     hours_over = data4 %>% 
       group_by(dateEST) %>%
       summarise(Tcount = sum(Tcount)/12)
-
-    
-
-
 ```
 
 

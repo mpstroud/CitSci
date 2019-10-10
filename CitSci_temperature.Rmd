@@ -66,9 +66,10 @@ diel <- function(x){
   max(x) - min(x)} 
 
 file.names <- dir(getwd(), pattern =".csv")
-    temp.summary<-data.frame(matrix(ncol = 8, nrow = 0)) 
-    colnames(temp.summary) <- c("site","year","month","day","min","mean","max","diel")
-            for(i in 1:length(file.names)){
+    temp.summary<-data.frame(matrix(ncol = 8, nrow = 1)) 
+    colnames(temp.summary) <- c("year","month","day","min","mean","max","diel","site")
+            
+    for(i in 1:length(file.names)){  
               
 file <- read.table(file.names[i],header=TRUE, sep=",", stringsAsFactors=TRUE)
 data2 <- select(file,c(sitecode,dateEST,TimeEST,depth_mm,temp_degc))
@@ -85,10 +86,14 @@ temp_summer_data <- temp_data %>%
   filter(month==c("6","7","8","9")) 
 temp_summer_par <- temp_summer_data %>%
   group_by(year,month,day) %>%
-  summarise_at("temp_degc", tibble::lst(min, mean, max, diel)) 
-temp.summary<-rbind(temp.summary,temp_summer_par)
-            }
+  summarise_at("depth_mm", tibble::lst(min, mean, max, diel))
 
+temp_summer_par$site <- as.vector(rep(file.names[i], nrow(temp_summer_par)))
+colnames(temp_summer_par) <- c("year","month","day","min","mean","max","diel","site")
+temp.summary<-rbind(temp.summary,temp_summer_par)
+    }
+    
+write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/DailyDataDepth.csv")
 ```    
     
 3) hours per day over a given threshold   

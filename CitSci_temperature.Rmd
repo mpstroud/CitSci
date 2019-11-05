@@ -30,9 +30,9 @@ detach("package:dplyr", unload=TRUE) : library(dplyr)
 options(stringsAsFactors = FALSE)
 
 setwd("~/Library/Mobile Documents/com~apple~CloudDocs/files")
-setwd("C:/Users/admin/iCloudDrive/files")
+setwd("C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/01_input")
 
-#############################################Individial site analysis. Input specs first and check output_lists for results
+#######################################Individial site analysis. Input specs first and check output_lists for results
 data <- read.csv("PUWC1S.csv")
 data2 <- select(data,c(sitecode,dateEST,TimeEST,depth_mm,temp_degc))
 data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y") #output is YYYY-mm-dd
@@ -58,7 +58,8 @@ temp_summer_par <- temp_summer_data %>%
 
 ```
 
-2) LOOPED SITE ANALISYS
+2) LOOPED SITE MEAN ANALISYS---run October 2019, files saved as products of EnviroDIY
+Code selects each file, subset by months 6-9, and summarize by 4 paramaters (min,max,mean, and diel range)
 ```{r setup, include=FALSE}
 ### iterate this for each file ###
 
@@ -96,16 +97,66 @@ temp.summary<-rbind(temp.summary,temp_summer_par)
 write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/DailyDataDepth.csv")
 ```    
     
-3) hours per day over a given threshold   
+3) LOOPED SITE HOURS OF THERMAL STRESS ANALISYS---
 ```{r}    
-################################################# hours per day over a given threshold
-thermal_setpoint = 20
-data4 = select(data2,c(dateEST))
-data4$Tcount = count_row_if(gt(thermal_setpoint), data2$temp_degc)
-    hours_over = data4 %>% 
-      group_by(dateEST) %>%
-      summarise(Tcount = sum(Tcount)/12)
-```
+setwd("C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/03_incremental/01_CitSci_temperature")
+criteria <- read.csv("Tcriterias.csv")
+criteria_temp <- select(criteria,c(dateEST,TimeEST,tempCWF,tempWWF,tempTSF))
+criteria_temp$dateEST <- as.Date(criteria_temp$dateEST, format = "%d-%B-%y")
+criteria_temp$dateEST <- as.character(criteria_temp$dateEST) ; criteria_temp$TimeEST <- as.character(criteria_temp$TimeEST)
+criteria_temp$datetime <- paste(criteria_temp$dateEST, criteria_temp$TimeEST) ; criteria_temp$datetime <- ymd_hm(criteria_temp$datetime)
+
+temp_data<-select(criteria_temp,c(TimeEST,tempCWF,tempWWF,tempTSF,datetime))
+
+temp_data <- temp_data %>%
+  mutate(year = year(datetime))  %>%
+  mutate(month = month(datetime))  %>%
+  mutate(day = day(datetime)) %>%
+  mutate(hour = hour(datetime))
+criteria <- select(temp_data,c(-datetime)) 
+#this contains criteria for temperatures, time, and date splitted by year/month/day
+
+#Now loop each file similary to section (2)
+setwd("C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/01_input")
+    
+file.names <- dir(getwd(), pattern =".csv")
+    temp.summary<-data.frame(matrix(ncol = 7, nrow = 1)) 
+    colnames(temp.summary) <- c("year","month","day","tempCWF","tempWWF","tempTSF","site")
+            
+    for(i in 1:length(file.names)){  
+              
+file <- read.table(file.names[i],header=TRUE, sep=",", stringsAsFactors=TRUE)
+data2 <- select(file,c(sitecode,dateEST,TimeEST,depth_mm,temp_degc))
+data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y")
+data2$dateEST <- as.character(data2$dateEST) ; data2$TimeEST <- as.character(data2$TimeEST)
+data2$datetime <- paste(data2$dateEST, data2$TimeEST) ; data2$datetime <- ymd_hm(data2$datetime)
+temp_data<-select(data2,c(sitecode,depth_mm,temp_degc,datetime))
+
+temp_data <- temp_data %>%
+  mutate(year = year(datetime))  %>%
+  mutate(month = month(datetime))  %>%
+  mutate(day = day(datetime)) %>%
+  mutate(hour = hour(datetime))
+temp_summer_data <- temp_data %>%
+  filter(month==c("6","7","8","9")) 
+temp_summer_par <- temp_summer_data %>%
+  group_by(year,month,day,hour) %>%
+  summarise_at("temp_degc", mean)
+
+##############################
+UP TO THIS POINT ALL WORKS BUT HOUR IS NOT UNIQUE, NEED DO AGGREGATE TO DATETIME VECTORS
+###############
+
+temp_summer_par$site <- as.vector(rep(file.names[i], nrow(temp_summer_par)))
+temp_summer_par <- semi_join(criteria,temp_summer_par,by="hour")
+colnames(temp_summer_par) <- c("year","month","day","hour","mean_Temp")
+
+
+temp.summary<-rbind(temp.summary,temp_summer_par)
+    }
+    
+write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/DailyDataDepth.csv")
+```    
 
 
 

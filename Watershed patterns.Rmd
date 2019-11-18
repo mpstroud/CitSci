@@ -1,0 +1,35 @@
+---
+title: "Watershed patterns"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+install.packages(c("FactoMineR", "factoextra"))
+library(FactoMineR)
+library(factoextra)
+
+
+data=read.table("clipboard",header=T,sep="\t") #all data
+data2=data[,5:21] #var for ordination
+rownames(data2)<-data$SiteID
+res.pca <- PCA(data2, graph = FALSE)
+print(res.pca)
+
+fviz_pca_ind(res.pca, col.ind = data$mean_temp, 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE # Avoid text overlapping (slow if many points)
+             )
+
+#bubble graph for lat-long versus temp
+install.packages("plotly")
+library(plotly)
+data=read.table("clipboard",header=T,sep="\t") #all data
+
+p <- plot_ly(data, x = ~lon, y = ~lat, type = 'scatter', mode = 'markers',
+        marker = list(size = ~mean_temp, opacity = 0.5)) %>%
+  layout(title = 'Mean_temp',
+         xaxis = list(showgrid = FALSE),
+         yaxis = list(showgrid = FALSE))
+p
+```
+

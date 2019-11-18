@@ -1,0 +1,35 @@
+---
+title: "Plot Stress"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(viridis) ##############################Specifically for Colors
+
+data=read.table("clipboard",header=T,sep="\t") 
+data_for_Plot <- data %>%
+  group_by(year,month,day,site) %>%
+  summarise_at("Tcount", mean) %>%
+  unite("dateMonth",year:month) %>%
+  unite("dateDay",dateMonth:day)
+  
+p<- ggplot(data_for_Plot, aes(dateDay,site)) +
+  geom_raster(aes(fill = Tcount))
+p + scale_fill_viridis_c(option = "plasma") +
+  theme(
+  # Remove panel border
+  panel.border = element_blank(),  
+  # Remove panel grid lines
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Remove panel background
+  panel.background = element_blank(),
+  # Add axis line
+  axis.line = element_line(colour = "grey")
+  )
+
+```
+

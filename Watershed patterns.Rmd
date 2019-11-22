@@ -15,7 +15,7 @@ rownames(data2)<-data$SiteID
 res.pca <- PCA(data2, graph = FALSE)
 print(res.pca)
 
-fviz_pca_ind(res.pca, col.ind = data$mean_temp, 
+fviz_pca_ind(res.pca, col.ind = data$lat, 
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
              repel = TRUE # Avoid text overlapping (slow if many points)
              )

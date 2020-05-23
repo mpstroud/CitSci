@@ -99,7 +99,7 @@ write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDe
     
 3) LOOPED SITE HOURS FOR THERMAL STRESS ANALISYS--run November 4th, 2019, file saved as "Temp_criterias.csv" in product folder
 ```{r}    
-setwd("C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/03_incremental/01_CitSci_temperature")
+setwd("~/Dropbox/COVID_TempDirectories/CitSci/files2")
 criteria=read.csv("Tcriterias.csv")
 criteria_temp=select(criteria,c(dateEST,TimeEST,tempCWF,tempWWF,tempTSF))
 criteria_temp$dateEST=as.Date(criteria_temp$dateEST, format = "%d-%B-%y")
@@ -159,7 +159,7 @@ write.csv(temp.summary,file = "C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDe
 
 4) Continuation of THERMAL STRESS ANALISYS
 ```{r}
-setwd("C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product")
+setwd("~/Dropbox/COVID_TempDirectories/CitSci/files2")
 data <- read.csv("Temp_criterias.csv")
 
 combined_dataset2=data

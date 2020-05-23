@@ -9,7 +9,8 @@ library(dplyr)
 library(tidyr)
 library(viridis) ##############################Specifically for Colors
 
-data=read.table("clipboard",header=T,sep="\t") 
+setwd("~/Dropbox/COVID_TempDirectories/CitSci")
+data=read.csv("tempTSF_stress_subset.csv")
 data_for_Plot <- data %>%
   group_by(year,month,day,site) %>%
   summarise_at("Tcount", mean) %>%

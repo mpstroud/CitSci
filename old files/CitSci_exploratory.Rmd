@@ -36,7 +36,7 @@ hist(case.count[,2])
 3) Individial site analysis. Input specs first and check output_lists for results
 ```{r}
 #Input
-data <- read.csv("PUWC1S.csv")
+data <- read.csv("SHPK5S.csv")
 thermal_setpoint = 20
 
 daily_data =list() 
@@ -47,6 +47,7 @@ daily_data =list()
           #5- daily Low-Turbidity data data with min, mean, max
             #6- daily DO-% data data with min, mean, max
               #7- daily DO-ppm data data with min, mean, max
+
 daily_plots =list() 
   #1- daily depth interactive plot
     #2- daily conductivity interactive plot
@@ -56,7 +57,7 @@ daily_plots =list()
             #6- daily DO-% interactive plot
               #7- daily DO-ppm interactive plot
 
-library(dplyr)  
+  
 library(lubridate)
 library(xts)
 library(tidyverse)
@@ -65,6 +66,8 @@ library(forecast)
 library(timeSeries)
 library(glue)
 library(expss)
+library(ggplot2)
+detach("package:dplyr"); library(dplyr)
 
 ################################################# create a workable datetime vector with :lubridate:
 data2 <- select(data,-c(sitecode,loggerid,DateTimeEST,TZ,filename,battery_v,boardtemp,DOTemp_degC,loggerDT))
@@ -98,10 +101,35 @@ data4$Tcount = count_row_if(gt(thermal_setpoint), data2$temp_degc)
       group_by(dateEST) %>%
       summarise(Tcount = sum(Tcount)/12)
 
+hours_over$hours <- round(hours_over$Tcount,0)
+  hours_over <- hours_over[ -c(449, 455, 456, 457), ]
+hours_over$dateEST<-as.Date(hours_over$dateEST, format = "%Y-%m-%d")
+            daily_timeseries2 = xts(x = hours_over[,-1], order.by = hours_over$dateEST)
+              dygraph(daily_timeseries2,xlab = NULL, ylab = "Thermal stress (hours)") %>%
+                  dySeries(c("hours"))
     
 
 
 ```
 
 
+```{r}
+daily_data[[1]]
+  #1- daily depth data data with min, mean, max
+    #2- daily conductivity data data with min, mean, max
+      #3- daily Temperature data data with min, mean, max
+        #4- daily High-Turbidity data data with min, mean, max
+          #5- daily Low-Turbidity data data with min, mean, max
+            #6- daily DO-% data data with min, mean, max
+              #7- daily DO-ppm data data with min, mean, max
+daily_plots[[3]]
+  #1- daily depth interactive plot
+    #2- daily conductivity interactive plot
+      #3- daily Temperature interactive plot
+        #4- daily High-Turbidity interactive plot
+          #5- daily Low-Turbidity interactive plot
+            #6- daily DO-% interactive plot
+              #7- daily DO-ppm interactive plot
+
+```
 

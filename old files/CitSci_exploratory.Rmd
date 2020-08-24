@@ -13,7 +13,6 @@ for(i in 1:length(pack_list)){
 }
 ```
 
-
 2) Case count for site selection
 ```{r setup, include=FALSE}
 library(ggplot2)

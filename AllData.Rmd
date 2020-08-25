@@ -188,13 +188,12 @@ AllDataSummarized_byHour.forGAM = temp.summary %>%
   arrange(month, day, hour) %>%
   mutate(temp = mean) %>%
   select(day,hour,month,temp)
-AllDataSummarized_byHour.forGAM$c.day=row.names(AllDataSummarized_byHour.forGAM) #rownames as cumulative time factor
+AllDataSummarized_byHour.forGAM$c.hour=row.names(AllDataSummarized_byHour.forGAM) #rownames as cumulative time factor
 GAM_data <- AllDataSummarized_byHour.forGAM #simplify name
 
+gam1<- gam(temp ~ s(c.hour), data = GAM_data, method = 'REML')
 
-gam1<- gam(temp ~ s(day), data = GAM_data, method = 'REML')
-
-gam1<- gam(temp ~ mgmc::s(day, bs="cc") + s(c.day, bs='cr',k=300), 
+gam1<- gam(temp ~ s(day, bs="cc") + s(c.hour, bs='cr',k=300), 
            data=AllDataSummarized_byHour.forGAM, method = 'REML', 
            knots = list (day = c(0.5,24.5)))
 

@@ -183,21 +183,27 @@ library(tidyr)
 library(mvtnorm)
 library(statmod)
 
-AllDataSummarized_byHour.forGAM = temp.summary %>% 
-  filter(site %in% c("PUCC2S.csv")) %>%
-  arrange(month, day, hour) %>%
-  mutate(temp = mean) %>%
-  select(day,hour,month,temp)
-AllDataSummarized_byHour.forGAM$c.hour=row.names(AllDataSummarized_byHour.forGAM) #rownames as cumulative time factor
-GAM_data <- AllDataSummarized_byHour.forGAM #simplify name
+AllDataSummarized_byHour.forGAM = temp.summary %>% #first for one site and see how it goes
+  filter(site %in% c("PUCC2S.csv")) 
 
-gam1<- gam(temp ~ s(c.hour), data = GAM_data, method = 'REML')
+GAM_data = AllDataSummarized_byHour.forGAM %>%
+  group_by(month,day) %>%
+  summarize(day_temp = mean(mean, na.rm = TRUE)) %>%
+  arrange(month, day) 
+  
+GAM_data$c.day=row.names(GAM_data) #rownames as cumulative time factor
+GAM_data$day<- as.numeric(GAM_data$day) ; GAM_data$c.day<- as.numeric(GAM_data$c.day)
 
-gam1<- gam(temp ~ s(day, bs="cc") + s(c.hour, bs='cr',k=300), 
-           data=AllDataSummarized_byHour.forGAM, method = 'REML', 
+gam1<- gam(day_temp ~ s(day, bs="cc") + s(c.day, bs='cr',k=300), 
+           data=GAM_data, method = 'REML', 
            knots = list (day = c(0.5,24.5)))
 
- globalenv()
+summary(gam1)
+ggplot(GAM_data, aes(x=c.day,y=day_temp))+geom_line()
+
+
+
+
 
 ```
 

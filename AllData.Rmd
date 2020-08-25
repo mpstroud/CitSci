@@ -5,26 +5,202 @@ date: "8/24/2020"
 output: html_document
 ---
 
+1) Package load/retrieval
+```{r,warning=F}
+#necessary packages: 
+pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","plyr","tidyr","forecast","lubridate", "expss","gganimate","mgcv","mvtnorm","statmod")
+for(i in 1:length(pack_list)){
+  p <- pack_list[[i]]
+  install.packages(p,repos = "https://cran.rstudio.com",dependencies = TRUE)
+}
+
+library(ggplot2)
+library(dplyr)  
+library(lubridate)
+library(xts)
+library(tidyverse)
+library(dygraphs)
+library(forecast)
+library(timeSeries)
+library(glue)
+library(expss)
+detach("package:dplyr", unload=TRUE) : library(dplyr)
+options(stringsAsFactors = FALSE)
+
+setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/01_input")
+
+#######################################
+```
+
+2) LOOPED SITE ANALYSIS---saves a file with all sites and min,max, mean, and diel range of temperature data into EnviroDIY/AllData
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+### Code selects each file and summarize by 4 paramaters (min,max,mean, and diel range)
+diel <- function(x){
+  max(x) - min(x)} #create a function to calculate diel change 
+
+file.names <- dir(getwd(), pattern =".csv") #a vector with all file names in the inout folder
+temp.summary<-data.frame(matrix(ncol = 8, nrow = 0)) #empty dataframe that will contain the integrated files into one single dataframe
+colnames(temp.summary) <- c("year","month","day","min","mean","max","diel","site") #name for the eight columns
+
+         
+for(i in 1:length(file.names)){  
+              
+        file <- read.table(file.names[i],header=TRUE, sep=",", stringsAsFactors=TRUE)
+        data2 <- select(file,c(sitecode,dateEST,TimeEST,depth_mm,temp_degc))
+        data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y")
+        data2$dateEST <- as.character(data2$dateEST) ; data2$TimeEST <- as.character(data2$TimeEST)
+        data2$datetime <- paste(data2$dateEST, data2$TimeEST) ; data2$datetime <- ymd_hm(data2$datetime)
+        temp_data<-select(data2,c(sitecode,depth_mm,temp_degc,datetime))
+
+              temp_data <- temp_data %>%
+                mutate(year = year(datetime))  %>%
+                mutate(month = month(datetime))  %>%
+                mutate(day = day(datetime))
+              temp_data <- temp_data %>%
+                filter(year==c("2018"))
+              temp_diel_data <- temp_data %>%
+                group_by(year,month,day) %>%
+                summarise_at("temp_degc", tibble::lst(min, mean, max, diel))
+
+                        temp_diel_data$site <- as.vector(rep(file.names[i], nrow(temp_diel_data)))
+                        colnames(temp_diel_data) <- c("year","month","day","min","mean","max","diel","site")
+                        temp_diel_data<-as.data.frame(temp_diel_data)
+                        temp.summary<-rbind(temp.summary,temp_diel_data)
+                            }
+                            
+write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData/AllDataSummarized.csv") #write the final file into the sensor product folder
+
+```    
+
+3) GENERAL PLOT---animation with monthly averages per site
+```{r}
+library(gganimate)
+theme_set(theme_bw())
+
+AllDataSummarized.forplot = temp.summary %>%
+  group_by(site,month) %>%
+  summarize(., site_month = mean(mean))
+
+p <- ggplot(
+  AllDataSummarized.forplot,
+  aes(month, site_month, group = site, color = factor(site))
+  ) +
+  geom_line() +
+  scale_color_viridis_d() +
+  labs(x = "Month", y = "Temperature") +
+  theme(legend.position = "top")
+
+anim_save("bymonth.gif", p + transition_reveal(month))
+
 ```
 
-## R Markdown
+4) GENERAL PLOT---hourly heat map for representative sites: ULAQ1S (73%forested) and PUCC2S (83.8%urban watershed)
+Follows the code developed by  John MacKintosh: https://www.r-graph-gallery.com/283-the-hourly-heatmap.html 
+```{r setup, include=FALSE}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+library(ggplot2)
+library(dplyr) 
+library(viridis)
+library(Interpol.T) 
+library(lubridate) 
+library(ggExtra)
+library(tidyr) 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#first I need to create hourly data for all sites:
+file.names <- dir(getwd(), pattern =".csv") #a vector with all file names in the inout folder
+temp.summary<-data.frame(matrix(ncol = 9, nrow = 0)) #empty dataframe that will contain the integrated files into one single dataframe
+colnames(temp.summary) <- c("year","month","day","hour","min","mean","max","diel","site") #name for the eight columns
 
-```{r cars}
-summary(cars)
+for(i in 1:length(file.names)){  
+              
+        file <- read.table(file.names[i],header=TRUE, sep=",", stringsAsFactors=TRUE)
+        data2 <- select(file,c(sitecode,dateEST,TimeEST,depth_mm,temp_degc))
+        data2$dateEST <- as.Date(data2$dateEST, format = "%d %B %y")
+        data2$dateEST <- as.character(data2$dateEST) ; data2$TimeEST <- as.character(data2$TimeEST)
+        data2$datetime <- paste(data2$dateEST, data2$TimeEST) ; data2$datetime <- ymd_hm(data2$datetime)
+        temp_data<-select(data2,c(sitecode,depth_mm,temp_degc,datetime))
+
+              temp_data <- temp_data %>%
+                mutate(year = year(datetime))  %>%
+                mutate(month = month(datetime))  %>%
+                mutate(day = day(datetime)) %>%
+                mutate(hour = hour(datetime))
+              temp_data <- temp_data %>%
+                filter(year==c("2018"))
+              temp_diel_data <- temp_data %>%
+                group_by(year,month,day,hour) %>%
+                summarise_at("temp_degc", tibble::lst(min, mean, max, diel))
+
+                        temp_diel_data$site <- as.vector(rep(file.names[i], nrow(temp_diel_data)))
+                        colnames(temp_diel_data) <- c("year","month","day","hour","min","mean","max","diel","site")
+                        temp_diel_data<-as.data.frame(temp_diel_data)
+                        temp.summary<-rbind(temp.summary,temp_diel_data)
+                            }
+                            
+write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData/AllDataSummarized_byHour.csv") #write the final file into the sensor product folder
+
+AllDataSummarized_byHour.forPlot = temp.summary %>% 
+  select(site,day,hour,month,year,mean) %>%
+  filter(site %in% c("ULAQ1S.csv", "PUCC2S.csv")) #to clean the datase for the plot
+
+#Now the plot:
+yearno <-unique(AllDataSummarized_byHour.forPlot$year)
+ 
+######## Plotting starts here#####################
+p <-ggplot(AllDataSummarized_byHour.forPlot,aes(day,hour,fill=mean))+
+  geom_tile(color= "white",size=0.1) + 
+  scale_fill_viridis(name="Hrly Temps C",option ="C")
+p <-p + facet_grid(site~month)
+p <-p + scale_y_continuous(trans = "reverse", breaks = unique(AllDataSummarized_byHour.forPlot$hour))
+p <-p + scale_x_continuous(breaks =c(1,10,20,31))
+p <-p + theme_minimal(base_size = 8)
+p <-p + labs(title= paste("Hourly Temps - Year",yearno), x="Day", y="Hour of Day")
+p <-p + theme(legend.position = "bottom")+
+  theme(plot.title=element_text(size = 14))+
+  theme(axis.text.y=element_text(size=6)) +
+  theme(strip.background = element_rect(colour="white"))+
+  theme(plot.title=element_text(hjust=0))+
+  theme(axis.ticks=element_blank())+
+  theme(axis.text=element_text(size=7))+
+  theme(legend.title=element_text(size=8))+
+  theme(legend.text=element_text(size=6))+
+  removeGrid()#ggExtra
+ 
+# you will want to expand your plot screen before this bit!
+p #awesomeness
+
+``` 
+
+5) HGAM with hourly temp data of 2018
+```{r}
+
+library(mgcv)
+library(plyr)
+library(viridis)
+library(dplyr)
+library(tidyr)
+library(mvtnorm)
+library(statmod)
+
+AllDataSummarized_byHour.forGAM = temp.summary %>% 
+  filter(site %in% c("PUCC2S.csv")) %>%
+  arrange(month, day, hour) %>%
+  mutate(temp = mean) %>%
+  select(day,hour,month,temp)
+AllDataSummarized_byHour.forGAM$c.day=row.names(AllDataSummarized_byHour.forGAM) #rownames as cumulative time factor
+GAM_data <- AllDataSummarized_byHour.forGAM #simplify name
+
+
+gam1<- gam(temp ~ s(day), data = GAM_data, method = 'REML')
+
+gam1<- gam(temp ~ mgmc::s(day, bs="cc") + s(c.day, bs='cr',k=300), 
+           data=AllDataSummarized_byHour.forGAM, method = 'REML', 
+           knots = list (day = c(0.5,24.5)))
+
+ globalenv()
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

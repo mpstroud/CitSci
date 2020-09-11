@@ -8,7 +8,7 @@ output: html_document
 1) Package load/retrieval
 ```{r,warning=F}
 #necessary packages: 
-pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","plyr","tidyr","forecast","lubridate", "expss","gganimate","mgcv","mvtnorm","statmod")
+pack_list<-list ("ggplot2","openair","dygraphs","xts","dataRetrieval","dplyr","plyr","tidyr","forecast","lubridate", "expss","gganimate","mgcv","mvtnorm","statmod","janitor")
 for(i in 1:length(pack_list)){
   p <- pack_list[[i]]
   install.packages(p,repos = "https://cran.rstudio.com",dependencies = TRUE)

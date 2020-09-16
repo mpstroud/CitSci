@@ -73,29 +73,7 @@ write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDe
 
 ```    
 
-3) GENERAL PLOT---animation with monthly averages per site
-```{r}
-library(gganimate)
-theme_set(theme_bw())
-
-AllDataSummarized.forplot = temp.summary %>%
-  group_by(site,month) %>%
-  summarize(., site_month = mean(mean))
-
-p <- ggplot(
-  AllDataSummarized.forplot,
-  aes(month, site_month, group = site, color = factor(site))
-  ) +
-  geom_line() +
-  scale_color_viridis_d() +
-  labs(x = "Month", y = "Temperature") +
-  theme(legend.position = "top")
-
-anim_save("bymonth.gif", p + transition_reveal(month))
-
-```
-
-4) GENERAL PLOT---hourly heat map for representative sites: ULAQ1S (73%forested) and PUCC2S (83.8%urban watershed)
+3) GENERAL PLOT---hourly heat map for representative sites: ULAQ1S (73%forested) and PUCC2S (83.8%urban watershed)
 Follows the code developed by  John MacKintosh: https://www.r-graph-gallery.com/283-the-hourly-heatmap.html 
 ```{r setup, include=FALSE}
 
@@ -172,7 +150,7 @@ p #awesomeness
 
 ``` 
 
-5) HGAM with hourly temp data of 2018
+4) HGAM with hourly temp data of 2018
 ```{r}
 
 library(mgcv)

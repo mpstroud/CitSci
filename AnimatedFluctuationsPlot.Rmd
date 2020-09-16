@@ -1,0 +1,37 @@
+---
+title: "AnimatedFluctuationsPlot"
+author: "MPG"
+date: "9/15/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+RawData <- read_csv("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData/AllDataSummarized_byHour.csv")
+
+AllDataSummarized_byHour.forplot = RawData %>% 
+  filter(.,site %in% c("ROCK_DS2")) %>% 
+  mutate(acc_hour = seq(0,nrow(.)-1,by=1))
+
+
+library(gganimate)
+theme_set(theme_bw())
+
+p <- ggplot(
+  AllDataSummarized_byHour.forplot,
+  aes(acc_hour, mean, group = site, color = factor(site))
+  ) +
+  geom_line(size=1) +
+  scale_color_viridis_d() +
+  labs(x = "Hour", y = "Temperature") +
+  theme(legend.position = "top")
+
+p + transition_reveal(acc_hour)
+
+setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData")
+anim_save("byhour.gif", p + transition_reveal(month))
+
+
+
+```
+

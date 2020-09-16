@@ -9,16 +9,25 @@ Using code from: https://towardsdatascience.com/create-animated-bar-charts-using
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(janitor)
+library(lubridate)
 
 RawData <- read_csv("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData/AllDataSummarized.csv")
 
 PlotData = RawData %>% 
-  select(month, mean,site) %>% 
-  group_by(month,site) %>%
+  select(month, mean,site,Name) %>% 
+  group_by(month,site,Name) %>%
   summarize(month_mean = mean(mean, na.rm = TRUE)) 
  
-PlotData<- filter(PlotData,site %in% c("BCWC10S","PUCC2S","PUWC1S","SHPK3S","SHPK4S","SHPK6S","ULAQ1S","ULLL2S","ROCK_DS2","HURR_US2"))
+PlotData<- filter(PlotData,site %in% c("BCWC10S","PUCC2S","PUWC1S","SHPK6S","ULAQ1S","ULLL2S","ROCK_DS2","HURR_US2"))
+
+#need to change site by Name and month# by month#name
+PlotData = PlotData %>% 
+  mutate (month2 = month(month,label=T,abbr = F)) %>% 
+  ungroup() %>% 
+  select(month2, Name, month_mean) 
   
+colnames(PlotData) = c("month","site","month_mean")
+
 library(gganimate)
 
 #reformatting data into ranks:
@@ -32,48 +41,55 @@ PlotData_formatted <- PlotData %>%
   filter(rank <=10) %>%
   ungroup()
 
+```
 
+
+```{r}
 #static plots
 staticplot = ggplot(PlotData_formatted, aes(rank, group = site, 
                 fill = as.factor(site), color = as.factor(site))) +
   geom_tile(aes(y = month_mean/2,
                 height = month_mean,
                 width = 0.9), alpha = 0.8, color = NA) +
-  geom_text(aes(y = 0, label = paste(site, " ")), vjust = 0.2, hjust = 1) +
-  geom_text(aes(y=month_mean,label = Value_lbl, hjust=0)) +
+  geom_text(aes(y = 0, label = paste(site, " ")), vjust = 0.2, hjust = 1,size=6) +
+  geom_text(aes(y=month_mean,label = Value_lbl, hjust=0),size=10) +
   coord_flip(clip = "off", expand = FALSE) +
   scale_y_continuous(labels = scales::comma) +
   scale_x_reverse() +
+  scale_colour_brewer(palette="Dark2") +
+  scale_fill_brewer(palette="Dark2") +
   guides(color = FALSE, fill = FALSE) +
   theme(axis.line=element_blank(),
         axis.text.x=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
-         axis.title.y=element_blank(),
+        axis.title.y=element_blank(),
         legend.position="none",
         panel.background=element_blank(),
         panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
-        panel.grid.major.x = element_line( size=.1, color="grey" ),
-        panel.grid.minor.x = element_line( size=.1, color="grey" ),
-        plot.title=element_text(size=25, hjust=0.5, face="bold", colour="grey", vjust=-1),
-        plot.subtitle=element_text(size=18, hjust=0.5, face="italic", color="grey"),
-        plot.caption =element_text(size=8, hjust=0.5, face="italic", color="grey"),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        plot.title=element_text(size=25, hjust=0.5, face="italic", colour="grey", vjust=3),
+        plot.subtitle=element_text(size=30, hjust=0.5, face="bold", color="black",vjust=1.5),
+        plot.caption =element_text(size=20, hjust=0.5, face="italic", color="grey"),
         plot.background=element_blank(),
-       plot.margin = margin(2,2, 2, 4, "cm"))
+       plot.margin = margin(6,6, 6,6, "cm"))
 
 #animation:
 
-anim = staticplot + transition_states(month, transition_length = 4, state_length = 1) +
+anim = staticplot + transition_states(month, transition_length = 1, state_length = 1) +
   view_follow(fixed_x = TRUE)  +
-  labs(title = 'Mean Temperature per Month : {closest_state}',  
-       subtitle  =  "Top 10 sites",
+  labs(title = 'Mean Temperature per Month',  
+        subtitle  =  "{closest_state}",
        caption  = "Temperature in degC | Data Source: DRWI")
 
-animate(anim, 200, fps = 20,  width = 1200, height = 1000, 
+animate(anim, 200, fps = 10,  width = 1000, height = 1000, 
         renderer = gifski_renderer("gganim.gif"))
+
+
 
 ```
 

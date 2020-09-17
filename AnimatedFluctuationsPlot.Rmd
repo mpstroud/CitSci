@@ -8,30 +8,92 @@ output: html_document
 ```{r setup, include=FALSE}
 
 RawData <- read_csv("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData/AllDataSummarized_byHour.csv")
+library(gganimate); library(zoo)
+theme_set(theme_bw())
+
 
 AllDataSummarized_byHour.forplot = RawData %>% 
   filter(.,site %in% c("ROCK_DS2")) %>% 
-  mutate(acc_hour = seq(0,nrow(.)-1,by=1))
+  mutate(acc_hour = seq(0,nrow(.)-1,by=1), 
+         temp_24da = zoo::rollmean(mean, k = 24, fill = NA))
 
-
-library(gganimate)
-theme_set(theme_bw())
-
+#first ~12 days of hourly variation
+AllDataSummarized_byHour.forplot1 = AllDataSummarized_byHour.forplot[4500:4700,]
 p <- ggplot(
-  AllDataSummarized_byHour.forplot,
-  aes(acc_hour, mean, group = site, color = factor(site))
-  ) +
-  geom_line(size=1) +
+  AllDataSummarized_byHour.forplot1,
+  aes(acc_hour, mean)) +
+  geom_line(size=2) +
   scale_color_viridis_d() +
-  labs(x = "Hour", y = "Temperature") +
-  theme(legend.position = "top")
+  labs(x = "10 days", y = "Water Temperature") +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_text(size =20),
+        axis.title.x=element_text(size =30),
+        axis.title.y=element_text(size =30),
+        panel.background=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+        
 
 p + transition_reveal(acc_hour)
 
 setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData")
-anim_save("byhour.gif", p + transition_reveal(month))
+anim_save("byhour.gif", p + transition_reveal(acc_hour))
 
 
+#then a full year of daily variation
+p <- ggplot(
+  AllDataSummarized_byHour.forplot,
+  aes(acc_hour, temp_24da)) +
+  geom_line(size=2) +
+  scale_color_viridis_d() +
+  labs(x = "365 Days", y = "Water Temperature") +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_text(size =20),
+        axis.title.x=element_text(size =30),
+        axis.title.y=element_text(size =30),
+        panel.background=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+        
 
+p + transition_reveal(acc_hour)
+
+setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData")
+anim_save("byseason.gif", p + transition_reveal(acc_hour))
+
+
+#then 50 years of monhtly variation (from Brandywine)
+BRA_Temp <- read_csv("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/01_input/Brandywine_Temp.csv")
+
+
+BRA_TempSummarized_bymonth.forplot = BRA_Temp %>% 
+  mutate(acc_month = seq(0,nrow(.)-1,by=1), 
+         temp_12m = zoo::rollmean(temperature, k = 12, fill = NA))
+
+p <- ggplot(
+  BRA_TempSummarized_bymonth.forplot,
+  aes(acc_month, temp_12m)) +
+  geom_line(size=2) +
+  scale_color_viridis_d() +
+  labs(x = "50 Years", y = "Water Temperature") +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_text(size =20),
+        axis.title.x=element_text(size =30),
+        axis.title.y=element_text(size =30),
+        panel.background=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+        
+
+p + transition_reveal(acc_month)
+
+setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData")
+anim_save("byyear.gif", p + transition_reveal(acc_month))
 ```
 

@@ -99,7 +99,7 @@ write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDe
     
 3) LOOPED SITE HOURS FOR THERMAL STRESS ANALISYS--run November 4th, 2019, file saved as "Temp_criterias.csv" in product folder
 ```{r}    
-setwd("~/Dropbox/COVID_TempDirectories/CitSci/files2")
+setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/03_incremental/01_CitSci_temperature")
 criteria=read.csv("Tcriterias.csv")
 criteria_temp=select(criteria,c(dateEST,TimeEST,tempCWF,tempWWF,tempTSF))
 criteria_temp$dateEST=as.Date(criteria_temp$dateEST, format = "%d-%B-%y")
@@ -119,7 +119,7 @@ criteria$datetime=paste(criteria$year,
 #this contains criteria for temperatures, time, and date splitted by year/month/day
 
 #Now loop each file similary to section (2)
-setwd("C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/01_input")
+setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/01_input")
     
 file.names=dir(getwd(), pattern =".csv")
     temp.summary<-data.frame(matrix(ncol = 9, nrow = 1)) 
@@ -159,29 +159,36 @@ write.csv(temp.summary,file = "C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDe
 
 4) Continuation of THERMAL STRESS ANALISYS
 ```{r}
-setwd("~/Dropbox/COVID_TempDirectories/CitSci/files2")
+setwd("R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/DRWIWork")
 data <- read.csv("Temp_criterias.csv")
 
 combined_dataset2=data
 combined_dataset2 <- na.omit(combined_dataset2)
 combined_dataset2$Tcount = count_row_if(gt(combined_dataset2$tempCWF), combined_dataset2$mean_Temp)
 combined_dataset2$site=as.factor(combined_dataset2$site) 
+combined_dataset2 = combined_dataset2[complete.cases(combined_dataset2), ]
 tempCWF_stress = combined_dataset2 %>% 
+      filter(.,site %in% c("BCWC10S.csv","PUCC2S.csv","PUWC1S.csv","SHPK6S.csv","ULAQ1S.csv","ULLL2S.csv","ROCK_DS2.csv","HURR_US2.csv","MSPR2S.csv","BCMC3S.csv")) %>% 
+      filter(.,year %in% c("2018")) %>% 
       group_by(site,year,month,day) %>%
       summarise(Tcount = sum(Tcount))
-write.csv(tempCWF_stress,file = "C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/tempCWF_stress.csv")
+write.csv(tempCWF_stress,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/DRWIWork/tempCWF_stress.csv")
 
 combined_dataset2$Tcount = count_row_if(gt(combined_dataset2$tempWWF), combined_dataset2$mean_Temp)
 tempWWF_stress = combined_dataset2 %>% 
+      filter(.,site %in% c("BCWC10S.csv","PUCC2S.csv","PUWC1S.csv","SHPK6S.csv","ULAQ1S.csv","ULLL2S.csv","ROCK_DS2.csv","HURR_US2.csv","MSPR2S.csv","BCMC3S.csv")) %>% 
+      filter(.,year %in% c("2018")) %>% 
       group_by(site,year,month,day) %>%
       summarise(Tcount = sum(Tcount))
-write.csv(tempWWF_stress,file = "C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/tempWWF_stress.csv")
+write.csv(tempWWF_stress,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/DRWIWork/tempWWF_stress.csv")
 
 combined_dataset2$Tcount = count_row_if(gt(combined_dataset2$tempTSF), combined_dataset2$mean_Temp)
 tempTSF_stress = combined_dataset2 %>% 
+      filter(.,site %in% c("BCWC10S.csv","PUCC2S.csv","PUWC1S.csv","SHPK6S.csv","ULAQ1S.csv","ULLL2S.csv","ROCK_DS2.csv","HURR_US2.csv","MSPR2S.csv","BCMC3S.csv")) %>% 
+      filter(.,year %in% c("2018")) %>% 
       group_by(site,year,month,day) %>%
       summarise(Tcount = sum(Tcount))
-write.csv(tempTSF_stress,file = "C:/Users/admin/Dropbox/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/tempTSF_stress.csv")
+write.csv(tempTSF_stress,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/DRWIWork/tempTSF_stress.csv")
 
 
 ```    

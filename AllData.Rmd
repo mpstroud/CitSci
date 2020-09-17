@@ -118,9 +118,9 @@ for(i in 1:length(file.names)){
                             
 write.csv(temp.summary,file = "R:/EcosystemEcologyLab/DRWIdataDirectory/DataInDevelopment/CitSciDeployments/EnviroDIY/sensors/04_product/AllData/AllDataSummarized_byHour.csv") #write the final file into the sensor product folder
 
-AllDataSummarized_byHour.forPlot = temp.summary %>% 
+AllDataSummarized_byHour.forPlot = RawData %>% 
   select(site,day,hour,month,year,mean) %>%
-  filter(site %in% c("ULAQ1S.csv", "PUCC2S.csv")) #to clean the datase for the plot
+  filter(site %in% c("ULAQ1S", "PUPP2S")) #to clean the datase for the plot
 
 #Now the plot:
 yearno <-unique(AllDataSummarized_byHour.forPlot$year)
@@ -145,8 +145,7 @@ p <-p + theme(legend.position = "bottom")+
   theme(legend.text=element_text(size=6))+
   removeGrid()#ggExtra
  
-# you will want to expand your plot screen before this bit!
-p #awesomeness
+p
 
 ``` 
 
